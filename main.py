@@ -200,9 +200,9 @@ def run():
 def run_tests():
     tests.test_layers(layers)
     tests.test_optimize(optimize)
-    tests.test_for_kitti_dataset('./data')
+    tests.test_for_kitti_dataset(data_dir)
     tests.test_train_nn(train_nn)
 
 if __name__ == '__main__':
     run_tests()
-    # run()
+    run()
