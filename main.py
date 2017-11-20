@@ -5,6 +5,8 @@ import warnings
 from distutils.version import LooseVersion
 import project_tests as tests
 
+import numpy as np
+
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -24,7 +26,7 @@ runs_dir = './runs'
 epochs = 10
 learning_rate = 1e-4
 batch_size = 10
-keep_prob = 0.75
+dropout_keep_prob = 0.75
 
 def load_vgg(sess, vgg_path):
     """
@@ -122,37 +124,37 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param train_op: TF Operation to train the neural network
     :param cross_entropy_loss: TF Tensor for the amount of loss
     :param input_image: TF Placeholder for input images
-    :param correct_label: TF Placeholder for label images
-    :param keep_prob: TF Placeholder for dropout keep probability
-    :param learning_rate: TF Placeholder for learning rate
+    :param correct_label_tf: TF Placeholder for label images
+    :param keep_prob_tf: TF Placeholder for dropout keep probability
+    :param learning_rate_tf: TF Placeholder for learning rate
     """
+    print("Training...")
 
     for epoch in range(epochs):
-        losses, i = [], 0
+        batch_losses, i = [], 0
 
         for images, labels in get_batches_fn(batch_size):
             i += 1
 
             feed = {input_image: images,
                     correct_label_tf: labels,
-                    keep_prob_tf: keep_prob,
+                    keep_prob_tf: dropout_keep_prob,
                     learning_rate_tf: learning_rate}
 
-            _, partial_loss = sess.run([train_op, cross_entropy_loss], feed_dict=feed)
+            _, batch_loss = sess.run([train_op, cross_entropy_loss], feed_dict=feed)
 
-            print("---> iteration: ", i, " partial loss:", partial_loss)
-            # losses.append(partial_loss)
+            print("Iteration: ", i, " loss:", batch_loss)
+            batch_losses.append(batch_loss)
 
         # training_loss = sum(losses) / len(losses)
         # all_training_losses.append(training_loss)
-        # print("epoch: ", epoch, " of ", epochs, "training loss: ", training_loss)
+        print("Epoch: ", epoch, " of ", epochs, " loss: ", np.mean(batch_losses))
 
 tests.test_train_nn(train_nn)
 
 def run():
     correct_label_tf = tf.placeholder(tf.float32, [None, image_shape[0], image_shape[1], num_classes])
     learning_rate_tf = tf.placeholder(tf.float32)
-    keep_prob_tf = tf.placeholder(tf.float32)
 
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
@@ -171,7 +173,7 @@ def run():
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
 
         # Returns the three layers, keep probability and input layer from the vgg architecture
-        image_input, keep_prob, layer3, layer4, layer7 = load_vgg(sess, vgg_path)
+        image_input, keep_prob_tf, layer3, layer4, layer7 = load_vgg(sess, vgg_path)
 
         # The resulting network architecture from adding a decoder on top of the given vgg model
         model = layers(layer3, layer4, layer7, num_classes)
@@ -189,10 +191,10 @@ def run():
         # Train the neural network
         train_nn(sess, epochs, batch_size, get_batches_fn,
                  train_op, cross_entropy_loss, image_input,
-                 correct_label_tf, keep_prob_tf, learning_rate)
+                 correct_label_tf, keep_prob_tf, learning_rate_tf)
 
         # Run the model with the test images and save each painted output image (roads painted green)
-        helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob,
+        helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob_tf,
                                       image_input)
 
         # OPTIONAL: Apply the trained model to a video
