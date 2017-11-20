@@ -55,8 +55,6 @@ def load_vgg(sess, vgg_path):
     
     return input_l, keep_prob, layer_3, layer_4, layer_7
 
-# tests.test_load_vgg(load_vgg, tf)
-
 
 def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
@@ -110,7 +108,6 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     train_op = tf.train.AdamOptimizer(learning_rate).minimize(cross_entropy_loss)
 
     return logits, train_op, cross_entropy_loss
-# tests.test_optimize(optimize)
 
 
 def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
@@ -131,10 +128,10 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     print("Training...")
 
     for epoch in range(epochs):
+        print("Epoch ", epoch)
         batch_losses, i = [], 0
 
         for images, labels in get_batches_fn(batch_size):
-            i += 1
 
             feed = {input_image: images,
                     correct_label_tf: labels,
@@ -143,12 +140,9 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
 
             _, batch_loss = sess.run([train_op, cross_entropy_loss], feed_dict=feed)
 
-            print("Iteration: ", i, " loss:", batch_loss)
-            batch_losses.append(batch_loss)
+            print("Epoch ", epoch, "Iteration: ", i, " loss:", batch_loss)
 
-        # training_loss = sum(losses) / len(losses)
-        # all_training_losses.append(training_loss)
-        print("Epoch: ", epoch, " of ", epochs, " loss: ", np.mean(batch_losses))
+            i += 1
 
 tests.test_train_nn(train_nn)
 

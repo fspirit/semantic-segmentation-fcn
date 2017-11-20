@@ -11,6 +11,9 @@ from glob import glob
 from urllib.request import urlretrieve
 from tqdm import tqdm
 
+import imgaug as ia
+from imgaug import augmenters as iaa
+
 
 class DLProgress(tqdm):
     last_block = 0
@@ -65,6 +68,25 @@ def gen_batch_function(data_folder, image_shape):
     :param image_shape: Tuple - Shape of image
     :return:
     """
+    def transform(image, gt_image):
+        seq = iaa.Sequential([
+            iaa.Fliplr(0.5),
+            iaa.Sometimes(0.5,
+                          iaa.OneOf([
+                              iaa.GaussianBlur(sigma=(0, 10.0)),
+                              iaa.Multiply((0.5, 1.5), per_channel=0.2),
+                              iaa.Affine(
+                                  scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
+                                  translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)}),
+                          ])),
+        ], random_order=True)
+
+        seq_det = seq.to_deterministic()
+        img = seq_det.augment_images([image])[0]
+        msk = seq_det.augment_images([gt_image])[0]
+
+        return img, msk
+
     def get_batches_fn(batch_size):
         """
         Create batches of training data
@@ -90,6 +112,8 @@ def gen_batch_function(data_folder, image_shape):
                 gt_bg = np.all(gt_image == background_color, axis=2)
                 gt_bg = gt_bg.reshape(*gt_bg.shape, 1)
                 gt_image = np.concatenate((gt_bg, np.invert(gt_bg)), axis=2)
+
+                image, gt_image = transform(image, gt_image)
 
                 images.append(image)
                 gt_images.append(gt_image)
