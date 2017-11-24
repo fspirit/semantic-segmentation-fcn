@@ -132,6 +132,19 @@ def gen_batch_functions(data_folder, image_shape):
 
     return gen_batches_train, gen_batches_val
 
+def get_painted_image(sess, logits, keep_prob, image_pl, image, image_shape):
+
+    im_softmax = sess.run(
+        [tf.nn.softmax(logits)],
+        {keep_prob: 1.0, image_pl: [image]})
+    im_softmax = im_softmax[0][:, 1].reshape(image_shape[0], image_shape[1])
+    segmentation = (im_softmax > 0.5).reshape(image_shape[0], image_shape[1], 1)
+    mask = np.dot(segmentation, np.array([[0, 255, 0, 127]]))
+    mask = scipy.misc.toimage(mask, mode="RGBA")
+    street_im = scipy.misc.toimage(image)
+    street_im.paste(mask, box=None, mask=mask)
+
+    return street_im
 
 def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape):
     """
@@ -147,17 +160,8 @@ def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape)
     for image_file in glob(os.path.join(data_folder, 'image_2', '*.png')):
         image = scipy.misc.imresize(scipy.misc.imread(image_file), image_shape)
 
-        im_softmax = sess.run(
-            [tf.nn.softmax(logits)],
-            {keep_prob: 1.0, image_pl: [image]})
-        im_softmax = im_softmax[0][:, 1].reshape(image_shape[0], image_shape[1])
-        segmentation = (im_softmax > 0.5).reshape(image_shape[0], image_shape[1], 1)
-        mask = np.dot(segmentation, np.array([[0, 255, 0, 127]]))
-        mask = scipy.misc.toimage(mask, mode="RGBA")
-        street_im = scipy.misc.toimage(image)
-        street_im.paste(mask, box=None, mask=mask)
-
-        yield os.path.basename(image_file), np.array(street_im)
+        p_image = get_painted_image(sess, logits, keep_prob, image_pl, image, image_shape)
+        yield os.path.basename(image_file), np.array(p_image)
 
 
 def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
@@ -174,7 +178,7 @@ def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_p
     for name, image in image_outputs:
         scipy.misc.imsave(os.path.join(output_dir, name), image)
 
-    builder = tf.saved_model.builder.SavedModelBuilder(output_dir)
+    builder = tf.saved_model.builder.SavedModelBuilder(output_dir + '/saved_model')
     builder.add_meta_graph_and_variables(sess,
                                        [tf.saved_model.tag_constants.TRAINING],
                                        signature_def_map=None,

@@ -3,12 +3,8 @@ import tensorflow as tf
 import helper
 import warnings
 from distutils.version import LooseVersion
-import project_tests as tests
 
 from model import FCNModel
-
-# Check TensorFlow Version
-
 
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
 print('TensorFlow Version: {}'.format(tf.__version__))
@@ -28,6 +24,7 @@ LEARNING_RATE = 1e-4
 BATCH_SIZE = 2
 DROPOUT_KEEP_PROB = 0.75
 
+
 def run():
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(DATA_DIR)
@@ -38,7 +35,7 @@ def run():
 
     with tf.Session() as sess:
 
-        vgg_path = os.path.join(DATA_DIR, 'vgg')
+        # vgg_path = os.path.join(DATA_DIR, 'vgg')
         get_batches_fn_train, get_batches_fn_val = helper.gen_batch_functions(os.path.join(DATA_DIR, 'data_road/training'), IMAGE_SHAPE)
 
         # OPTIONAL: Augment Images for better results
@@ -56,7 +53,7 @@ def run():
         model.predict(sess, BATCH_SIZE, get_batches_fn_val)
 
         # Run the model with the test images and save each painted output image (roads painted green)
-        # helper.save_inference_samples(RUNS_DIR, DATA_DIR, sess, IMAGE_SHAPE, model.logits, model.keep_prob_tf, model.input_tf)
+        helper.save_inference_samples(RUNS_DIR, DATA_DIR, sess, IMAGE_SHAPE, model.logits, model.keep_prob_tf, model.input_tf)
 
         # OPTIONAL: Apply the trained model to a video
 
