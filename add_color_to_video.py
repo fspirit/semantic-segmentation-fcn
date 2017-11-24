@@ -41,11 +41,11 @@ def process_video(original_video_path):
         input_ph, keep_prob_ph, logits = read_saved_model(sess)
 
         output_video = original_video.fl_image(lambda frame: process_frame(sess, logits, keep_prob_ph, input_ph, frame))
-        output_video.write_videofile('./video/output.mp4', audio=False)
+        output_video.write_videofile('./video/output_01.mp4', audio=False)
 
 if __name__ == '__main__':
     # import imageio
     # imageio.plugins.ffmpeg.download()
-    process_video('./video/project_video_test_01.mp4')
+    process_video('./video/project_video.mp4')
 
 

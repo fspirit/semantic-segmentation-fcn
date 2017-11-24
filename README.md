@@ -64,13 +64,10 @@ data than a model without augmentation.
 
 Some samples:
 
-![1](https://www.dropbox.com/s/2bzn7otsx9lkato/um_000004.png?dl=0)
-
-![2](https://yadi.sk/i/w--8vwzV3PzpLq)
-
-![3](https://yadi.sk/i/YyLUSVaB3PzpN7)
-
-![4](https://yadi.sk/i/mOk6WS-e3PzpQf)
+![1](/image_results/01.png)
+![2](/image_results/02.png)
+![3](/image_results/03.png)
+![4](/image_results/04.png)
 
 Some samples
 
