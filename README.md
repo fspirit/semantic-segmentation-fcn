@@ -69,7 +69,7 @@ Some samples:
 ![3](/image_results/03.png)
 ![4](/image_results/04.png)
 
-Some samples
+[Complete results](https://yadi.sk/d/sxHHfAr33PzsYW)
 
 ### Video
 
